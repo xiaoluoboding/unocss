@@ -163,7 +163,7 @@ export interface ConfigBase<Theme extends {} = {}> {
   sortLayers?: (layers: string[]) => string[]
 }
 
-export interface Preset extends ConfigBase {
+export interface Preset<Theme extends {} = {}> extends ConfigBase<Theme> {
   name: string
   enforce?: 'pre' | 'post'
 }
@@ -225,7 +225,7 @@ export interface GenerateResult {
   css: string
   layers: string[]
   getLayer(name?: string): string | undefined
-  getLayers(excludes?: string[]): string
+  getLayers(includes?: string[], excludes?: string[]): string
   matched: Set<string>
 }
 
