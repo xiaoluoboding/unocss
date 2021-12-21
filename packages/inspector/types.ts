@@ -1,10 +1,11 @@
-import { GenerateResult, ResolvedConfig } from '@unocss/core'
+import type { GenerateResult, ResolvedConfig } from '@unocss/core'
 
 export interface ProjectInfo {
+  version: string
   root: string
   modules: string[]
-  configPath?: string
   config: ResolvedConfig
+  configSources?: string[]
 }
 
 export interface Result extends Omit<GenerateResult, 'matched'> {

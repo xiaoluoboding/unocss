@@ -1,10 +1,11 @@
-import VitePlugin, { VitePluginOptions } from '@unocss/vite'
+import type { VitePluginConfig } from '@unocss/vite'
+import VitePlugin from '@unocss/vite'
 import presetUno from '@unocss/preset-uno'
-import { Plugin } from 'vite'
+import type { Plugin } from 'vite'
 
 export * from '@unocss/vite'
 
-export default function UnocssVitePlugin(configOrPath?: VitePluginOptions | string): Plugin[] {
+export default function UnocssVitePlugin(configOrPath?: VitePluginConfig | string): Plugin[] {
   return VitePlugin(
     configOrPath,
     {

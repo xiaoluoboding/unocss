@@ -1,6 +1,6 @@
 {
   "name": "@unocss/nuxt",
-  "version": "0.9.3",
+  "version": "0.16.4",
   "description": "Nuxt module for UnoCSS",
   "keywords": [
     "unocss",
@@ -36,17 +36,20 @@
     "runtime"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch src"
+    "build": "unbuild",
+    "stub": "unbuild --stub"
   },
   "dependencies": {
+    "@nuxt/kit": "npm:@nuxt/kit-edge@latest",
     "@unocss/core": "workspace:*",
-    "@unocss/webpack": "workspace:*",
-    "@unocss/vite": "workspace:*",
-    "@unocss/reset": "workspace:*",
-    "@unocss/preset-uno": "workspace:*",
     "@unocss/preset-attributify": "workspace:*",
     "@unocss/preset-icons": "workspace:*",
-    "@nuxt/kit": "npm:@nuxt/kit-edge@latest"
+    "@unocss/preset-uno": "workspace:*",
+    "@unocss/reset": "workspace:*",
+    "@unocss/vite": "workspace:*",
+    "@unocss/webpack": "workspace:*"
+  },
+  "devDependencies": {
+    "@nuxt/schema": "npm:@nuxt/schema-edge@latest"
   }
 }

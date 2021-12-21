@@ -1,6 +1,6 @@
 {
   "name": "@unocss/config",
-  "version": "0.9.3",
+  "version": "0.16.4",
   "description": "Config loader for UnoCSS",
   "keywords": [],
   "homepage": "https://github.com/antfu/unocss/tree/main/packages/config#readme",
@@ -17,25 +17,26 @@
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "sideEffects": false,
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs"
+    }
   },
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch src"
+    "build": "unbuild",
+    "stub": "unbuild --stub"
   },
   "engines": {
     "node": ">=14"
   },
   "dependencies": {
     "@unocss/core": "workspace:*",
-    "sucrase": "^3.20.3"
-  },
-  "devDependencies": {
-    "find-up": "^5"
+    "unconfig": "^0.2.2"
   }
 }

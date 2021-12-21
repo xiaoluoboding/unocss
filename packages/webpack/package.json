@@ -1,6 +1,6 @@
 {
   "name": "@unocss/webpack",
-  "version": "0.9.3",
+  "version": "0.16.4",
   "description": "The Webpack plugin for UnoCSS",
   "keywords": [
     "unocss",
@@ -21,26 +21,27 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs"
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
     }
   },
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch src"
+    "build": "unbuild",
+    "stub": "unbuild --stub"
   },
   "dependencies": {
-    "@rollup/pluginutils": "^4.1.1",
+    "@rollup/pluginutils": "^4.1.2",
     "@unocss/config": "workspace:*",
     "@unocss/core": "workspace:*",
-    "unplugin": "^0.2.20",
-    "webpack-sources": "^3.2.1"
+    "unplugin": "^0.2.21",
+    "webpack-sources": "^3.2.2"
   },
   "peerDependencies": {
     "webpack": "^4 || ^5"
@@ -48,6 +49,6 @@
   "devDependencies": {
     "@types/webpack": "^5.28.0",
     "@types/webpack-sources": "^3.2.0",
-    "webpack": "^5.64.0"
+    "webpack": "^5.65.0"
   }
 }

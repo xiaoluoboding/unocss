@@ -1,13 +1,13 @@
 import { readFile, writeFile } from 'fs/promises'
-import { relative, resolve } from 'pathe'
+import { basename, relative, resolve } from 'pathe'
 import fg from 'fast-glob'
 import consola from 'consola'
-import { cyan, dim, green, white } from 'colorette'
-import { createGenerator } from '@unocss/core'
+import { cyan, dim, green } from 'colorette'
+import { createGenerator, toArray } from '@unocss/core'
 import type { UnoGenerator } from '@unocss/core'
-import { loadConfig } from '@unocss/config'
+import { createConfigLoader } from '@unocss/config'
 import { version } from '../package.json'
-import { handleError, PrettyError } from './errors'
+import { PrettyError, handleError } from './errors'
 import { debouncePromise } from './utils'
 import { defaultConfig } from './config'
 import type { CliOptions, ResolvedCliOptions } from './types'
@@ -44,9 +44,11 @@ export async function resolveOptions(options: CliOptions) {
 
 export async function build(_options: CliOptions) {
   const options = await resolveOptions(_options)
+  const loadConfig = createConfigLoader()
+  const { config, sources: configSources } = await loadConfig()
 
   uno = createGenerator(
-    loadConfig()?.config ?? {},
+    config,
     defaultConfig,
   )
 
@@ -77,7 +79,9 @@ export async function build(_options: CliOptions) {
 
     consola.info(
       `Watching for changes in ${
-        cyan(Array.isArray(patterns) ? patterns.join(white(', ')) : patterns)}`,
+        toArray(patterns)
+          .map(i => cyan(i))
+          .join(', ')}`,
     )
 
     const watcher = watch(patterns, {
@@ -86,17 +90,26 @@ export async function build(_options: CliOptions) {
       ignored,
     })
 
-    watcher.on('all', async(type, file) => {
-      consola.log(`${green(`${type}`)} ${white(dim(file))}`)
+    if (configSources.length) {
+      watcher.add(configSources)
 
-      if (type.startsWith('unlink'))
-        fileCache.delete(file)
+      watcher.on('all', async(type, file) => {
+        if (configSources.includes(file)) {
+          uno.setConfig((await loadConfig()).config)
+          consola.info(`${cyan(basename(file))} changed, setting new config`)
+        }
+        else {
+          consola.log(`${green(type)} ${dim(file)}`)
 
-      else
-        fileCache.set(file, await readFile(file, 'utf8'))
+          if (type.startsWith('unlink'))
+            fileCache.delete(file)
+          else
+            fileCache.set(file, await readFile(file, 'utf8'))
+        }
 
-      debouncedBuild()
-    })
+        debouncedBuild()
+      })
+    }
   }
 
   await generate(options)

@@ -18,13 +18,12 @@ jobs:
     strategy:
       matrix:
         node-version: [14.x, 16.x]
-        # os: [ubuntu-latest, windows-latest, macos-latest]
         os: [ubuntu-latest]
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
-  
+
       - name: Install pnpm
         uses: pnpm/action-setup@v2.0.1
         with:
@@ -35,7 +34,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org/
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - run: pnpm install
 
@@ -47,3 +46,7 @@ jobs:
 
       - name: Test
         run: pnpm run test
+
+      - name: Install & Build VS Code Extension
+        run: yarn install && yarn build
+        working-directory: ./packages/vscode

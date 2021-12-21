@@ -16,7 +16,15 @@ export default function extractorPug(): Extractor {
     name: 'pug',
     order: -1,
     async extract(ctx) {
-      if (ctx.id?.match(/\.vue$/) || ctx.id?.match(/\.vue\?vue/)) {
+      if (!ctx.id)
+        return
+      if (ctx.id.match(/\.pug$/) || ctx.id.match(/\?vue&type=template/)) {
+        try {
+          ctx.code = await compile(ctx.code, ctx.id) || ctx.code
+        }
+        catch {}
+      }
+      else if (ctx.id.match(/\.vue$/)) {
         const matches = Array.from(ctx.code.matchAll(regexVueTemplate))
         let tail = ''
         for (const match of matches) {
@@ -25,9 +33,6 @@ export default function extractorPug(): Extractor {
         }
         if (tail)
           ctx.code = `${ctx.code}\n\n${tail}`
-      }
-      else if (ctx.id?.endsWith('.pug')) {
-        ctx.code = await compile(ctx.code, ctx.id) || ctx.code
       }
       return undefined
     },

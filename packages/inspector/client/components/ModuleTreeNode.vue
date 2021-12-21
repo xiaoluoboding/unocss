@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TreeNode } from '../composables/fetch'
+import type { TreeNode } from '../composables/fetch'
 
 withDefaults(defineProps<{
   node: TreeNode
@@ -20,7 +20,7 @@ const route = useRoute()
       truncate
       p="y1"
     >
-      <div :class="icon"></div>
+      <div :class="icon" />
       {{ node.name }}
     </summary>
 

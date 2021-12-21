@@ -1,6 +1,6 @@
 {
   "name": "@unocss/preset-uno",
-  "version": "0.9.3",
+  "version": "0.16.4",
   "description": "The default preset for UnoCSS",
   "keywords": [
     "unocss",
@@ -21,23 +21,28 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs"
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
     },
     "./theme": {
-      "require": "./dist/theme.js",
-      "import": "./dist/theme.mjs"
+      "require": "./dist/theme.cjs",
+      "import": "./dist/theme.mjs",
+      "types": "./dist/theme.d.ts"
     },
-    "./variants": {
-      "require": "./dist/variants.js",
-      "import": "./dist/variants.mjs"
+    "./colors": {
+      "require": "./dist/colors.cjs",
+      "import": "./dist/colors.mjs",
+      "types": "./dist/colors.d.ts"
     },
-    "./rules": {
-      "require": "./dist/rules.js",
-      "import": "./dist/rules.mjs"
-    }
+    "./utils": {
+      "require": "./dist/utils.cjs",
+      "import": "./dist/utils.mjs",
+      "types": "./dist/utils.d.ts"
+    },
+    "./*": "./*"
   },
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
@@ -45,10 +50,12 @@
     "*.css"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch src"
+    "build": "unbuild",
+    "stub": "unbuild --stub"
   },
   "dependencies": {
-    "@unocss/core": "workspace:*"
+    "@unocss/core": "workspace:*",
+    "@unocss/preset-wind": "workspace:*",
+    "@unocss/preset-mini": "workspace:*"
   }
 }

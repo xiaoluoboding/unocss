@@ -1,6 +1,6 @@
 {
   "name": "@unocss/cli",
-  "version": "0.9.3",
+  "version": "0.16.4",
   "description": "CLI for UnoCSS",
   "keywords": [],
   "homepage": "https://github.com/antfu/unocss/tree/main/packages/cli#readme",
@@ -19,10 +19,10 @@
     "email": "pkg@johannschopplich.com",
     "url": "https://johannschopplich.com"
   },
-  "exports": "./dist/index.js",
-  "main": "./dist/index.js",
+  "exports": "./dist/index.cjs",
+  "main": "./dist/index.cjs",
   "bin": {
-    "unocss": "./bin/unocss.js"
+    "unocss": "./bin/unocss.cjs"
   },
   "types": "./dist/index.d.ts",
   "files": [
@@ -30,8 +30,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch src"
+    "build": "unbuild",
+    "stub": "unbuild --stub"
   },
   "engines": {
     "node": ">=14"
@@ -40,7 +40,7 @@
     "@unocss/config": "workspace:*",
     "@unocss/core": "workspace:*",
     "@unocss/preset-uno": "workspace:*",
-    "cac": "^6.7.11",
+    "cac": "^6.7.12",
     "chokidar": "^3.5.2",
     "colorette": "^2.0.16",
     "consola": "^2.15.3",

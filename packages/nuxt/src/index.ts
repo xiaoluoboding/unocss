@@ -1,12 +1,15 @@
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, extendViteConfig, extendWebpackConfig, addPluginTemplate, addComponentsDir } from '@nuxt/kit'
-import { UserConfig } from '@unocss/core'
-import presetUno from '@unocss/preset-uno'
-import presetAttributify, { AttributifyOptions } from '@unocss/preset-attributify'
-import presetIcons, { IconsOptions } from '@unocss/preset-icons'
+import { addComponentsDir, addPluginTemplate, defineNuxtModule, extendViteConfig, extendWebpackConfig } from '@nuxt/kit'
+import type { PresetUnoOptions } from '@unocss/preset-uno'
+import { presetUno } from '@unocss/preset-uno'
+import type { AttributifyOptions } from '@unocss/preset-attributify'
+import presetAttributify from '@unocss/preset-attributify'
+import type { IconsOptions } from '@unocss/preset-icons'
+import presetIcons from '@unocss/preset-icons'
 import WebpackPlugin from '@unocss/webpack'
 import VitePlugin from '@unocss/vite'
+import type { UserConfig } from '@unocss/core'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
@@ -38,7 +41,7 @@ export interface UnocssNuxtOptions extends UserConfig {
    * Only works when `presets` is not specified
    * @default true
    */
-  uno?: boolean
+  uno?: boolean | PresetUnoOptions
 
   /**
    * Enable attributify mode and the options of it
@@ -58,9 +61,12 @@ export interface UnocssNuxtOptions extends UserConfig {
 export default defineNuxtModule<UnocssNuxtOptions>({
   name: 'unocss',
   defaults: {
-    autoImport: true,
-    components: true,
     uno: true,
+    attributify: false,
+    preflight: false,
+    icons: false,
+    components: true,
+    autoImport: true,
   },
   configKey: 'unocss',
   setup(options) {
@@ -68,11 +74,11 @@ export default defineNuxtModule<UnocssNuxtOptions>({
     if (options.presets == null) {
       options.presets = []
       if (options.uno)
-        options.presets.push(presetUno())
+        options.presets.push(presetUno(typeof options.uno === 'boolean' ? {} : options.uno))
       if (options.attributify)
-        options.presets.push(presetAttributify(typeof options.attributify == 'boolean' ? {} : options.attributify))
+        options.presets.push(presetAttributify(typeof options.attributify === 'boolean' ? {} : options.attributify))
       if (options.icons)
-        options.presets.push(presetIcons(typeof options.icons == 'boolean' ? {} : options.icons))
+        options.presets.push(presetIcons(typeof options.icons === 'boolean' ? {} : options.icons))
     }
 
     if (options.autoImport) {
@@ -110,8 +116,11 @@ export default defineNuxtModule<UnocssNuxtOptions>({
   },
 })
 
-declare module '@nuxt/kit' {
-  interface ConfigSchema {
+declare module '@nuxt/schema' {
+  interface NuxtConfig {
+    unocss?: UnocssNuxtOptions
+  }
+  interface NuxtOptions {
     unocss?: UnocssNuxtOptions
   }
 }

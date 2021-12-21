@@ -1,7 +1,7 @@
-import { StringifiedUtil, ParsedUtil, RawUtil, Variant, VariantObject } from '../types'
+import type { ParsedUtil, RawUtil, StringifiedUtil, Variant, VariantObject } from '../types'
 
 export const attributifyRE = /^\[(.+?)~?="(.*)"\]$/
-export const validateFilterRE = /[a-z?]/
+export const validateFilterRE = /(?!\d|-{2}|-\d)[a-zA-Z0-9\u00A0-\uFFFF-_:%-?]/
 
 export function isAttributifySelector(selector: string) {
   return selector.match(attributifyRE)
@@ -19,4 +19,8 @@ export function normalizeVariant(variant: Variant): VariantObject {
 
 export function isRawUtil(util: ParsedUtil | RawUtil | StringifiedUtil): util is RawUtil {
   return util.length === 3
+}
+
+export function notNull<T>(value: T | null | undefined): value is T {
+  return value != null
 }

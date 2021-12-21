@@ -6,6 +6,9 @@ export type ArgumentType<T> = T extends ((...args: infer A) => any) ? A : never
 export type Shift<T> = T extends [_: any, ...args: infer A] ? A : never
 export type RestArgs<T> = Shift<ArgumentType<T>>
 export type DeepPartial<T> = { [P in keyof T]?: DeepPartial<T[P]> }
+export type FlatObjectTuple<T> = { [K in keyof T]: T[K] }
+export type PartialByKeys<T, K extends keyof T = keyof T> = FlatObjectTuple<Partial<Pick<T, Extract<keyof T, K>>> & Omit<T, K>>
+export type RequiredByKey<T, K extends keyof T = keyof T> = FlatObjectTuple<Required<Pick<T, Extract<keyof T, K>>> & Omit<T, K>>
 
 export type CSSObject = Record<string, string | number | undefined>
 export type CSSEntries = [string, string | number | undefined][]
@@ -52,28 +55,41 @@ export interface Extractor {
 }
 
 export interface RuleMeta {
+  /**
+   * The layer name of this rule.
+   * @default 'default'
+   */
   layer?: string
+  /**
+   * Internal rules will only be matched for shortcuts but not the user code.
+   * @default false
+   */
+  internal?: boolean
 }
 
-export type DynamicMatcher<Theme extends {} = {}> = ((match: string[], context: Readonly<RuleContext<Theme>>) => Awaitable<CSSObject | CSSEntries | string | undefined>)
+export type CSSValues = CSSObject | CSSEntries | (CSSObject | CSSEntries)[]
+
+export type DynamicMatcher<Theme extends {} = {}> = ((match: string[], context: Readonly<RuleContext<Theme>>) => Awaitable<CSSValues | string | undefined>)
 export type DynamicRule<Theme extends {} = {}> = [RegExp, DynamicMatcher<Theme>] | [RegExp, DynamicMatcher<Theme>, RuleMeta]
 export type StaticRule = [string, CSSObject | CSSEntries] | [string, CSSObject | CSSEntries, RuleMeta]
 export type Rule<Theme extends {} = {}> = DynamicRule<Theme> | StaticRule
 
-export type DynamicShortcutMatcher = ((match: string[]) => (string | string [] | undefined))
+export type DynamicShortcutMatcher<Theme extends {} = {}> = ((match: string[], context: Readonly<RuleContext<Theme>>) => (string | string [] | undefined))
 
-export type DynamicShortcut = [RegExp, DynamicShortcutMatcher] | [RegExp, DynamicShortcutMatcher, RuleMeta]
 export type StaticShortcut = [string, string | string[]] | [string, string | string[], RuleMeta]
 export type StaticShortcutMap = Record<string, string | string[]>
-export type UserShortcuts = StaticShortcutMap | (StaticShortcut | DynamicShortcut | StaticShortcutMap)[]
-export type Shortcut = StaticShortcut | DynamicShortcut
+export type DynamicShortcut<Theme extends {} = {}> = [RegExp, DynamicShortcutMatcher<Theme>] | [RegExp, DynamicShortcutMatcher<Theme>, RuleMeta]
+export type UserShortcuts<Theme extends {} = {}> = StaticShortcutMap | (StaticShortcut | DynamicShortcut<Theme> | StaticShortcutMap)[]
+export type Shortcut<Theme extends {} = {}> = StaticShortcut | DynamicShortcut<Theme>
+
+export type FilterPattern = ReadonlyArray<string | RegExp> | string | RegExp | null
 
 export interface Preflight {
   getCSS: () => string | undefined
   layer?: string
 }
 
-export type ExcludeRule = string | RegExp
+export type BlocklistRule = string | RegExp
 
 export interface VariantHandler {
   /**
@@ -83,15 +99,15 @@ export interface VariantHandler {
   /**
    * Rewrite the output selector. Often be used to append pesudo classes or parents.
    */
-  selector?: (input: string) => string | undefined
+  selector?: (input: string, body: CSSEntries) => string | undefined
   /**
    * Rewrite the output css body. The input come in [key,value][] pairs.
    */
   body?: (body: CSSEntries) => CSSEntries | undefined
   /**
-   * Provide media query to the output css.
+   * Provide a parent selector(e.g. media query) to the output css.
    */
-  mediaQuery?: string | undefined
+  parent?: string | [string, number] | undefined
 }
 
 export type VariantFunction<Theme extends {} = {}> = (matcher: string, raw: string, theme: Theme) => string | VariantHandler | undefined
@@ -134,7 +150,12 @@ export interface ConfigBase<Theme extends {} = {}> {
    * Rules to exclude the selectors for your design system (to narrow down the possibilities).
    * Combining `warnExcluded` options it can also helps you identify wrong usages.
    */
-  excluded?: ExcludeRule[]
+  blocklist?: BlocklistRule[]
+
+  /**
+   * Utilities that always been included
+   */
+  safelist?: string[]
 
   /**
    * Extractors to handle the source file and outputs possible classes/selectors
@@ -166,6 +187,10 @@ export interface ConfigBase<Theme extends {} = {}> {
 export interface Preset<Theme extends {} = {}> extends ConfigBase<Theme> {
   name: string
   enforce?: 'pre' | 'post'
+  /**
+   * Preset options for other tools like IDE to consume
+   */
+  options?: any
 }
 
 export interface GeneratorOptions {
@@ -177,11 +202,11 @@ export interface GeneratorOptions {
   mergeSelectors?: boolean
 
   /**
-   * Emit warning when excluded selectors are found
+   * Emit warning when matched selectors are presented in blocklist
    *
    * @default true
    */
-  warnExcluded?: boolean
+  warn?: boolean
 }
 
 export interface UserOnlyOptions<Theme extends {} = {}> {
@@ -189,6 +214,11 @@ export interface UserOnlyOptions<Theme extends {} = {}> {
    * The theme object, will be merged with the theme provides by presets
    */
   theme?: Theme
+
+  /**
+   * Preprocess the incoming utilities, return falsy value to exclude
+   */
+  preprocess?: (matcher: string) => string | undefined
 
   /**
    * Layout name of shortcuts
@@ -200,7 +230,7 @@ export interface UserOnlyOptions<Theme extends {} = {}> {
   /**
    * Presets
    */
-  presets?: Preset[]
+  presets?: (Preset | Preset[])[]
 
   /**
    * Environment mode
@@ -210,10 +240,40 @@ export interface UserOnlyOptions<Theme extends {} = {}> {
   envMode?: 'dev' | 'build'
 }
 
-export interface UserConfig<Theme extends {} = {}> extends ConfigBase<Theme>, UserOnlyOptions<Theme>, GeneratorOptions {}
+/**
+ * For other modules to aggregate the options
+ */
+export interface PluginOptions {
+  /**
+   * Load from configs files
+   *
+   * set `false` to disable
+   */
+  configFile?: string | false
+
+  /**
+   * List of files that will also triggers config reloads
+   */
+  configDeps?: string[]
+
+  /**
+   * Patterns that filter the files being extracted.
+   */
+  include?: FilterPattern
+
+  /**
+   * Patterns that filter the files NOT being extracted.
+   */
+  exclude?: FilterPattern
+}
+
+export interface UserConfig<Theme extends {} = {}> extends ConfigBase<Theme>, UserOnlyOptions<Theme>, GeneratorOptions, PluginOptions {}
 export interface UserConfigDefaults<Theme extends {} = {}> extends ConfigBase<Theme>, UserOnlyOptions<Theme> {}
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'rules' | 'shortcuts'> {
+export interface ResolvedConfig extends Omit<
+RequiredByKey<UserConfig, 'mergeSelectors' | 'theme' | 'rules' | 'variants' | 'layers' | 'extractors' | 'blocklist' | 'safelist' | 'preflights' | 'sortLayers'>,
+'rules' | 'shortcuts'
+> {
   shortcuts: Shortcut[]
   variants: VariantObject[]
   rulesSize: number
@@ -253,7 +313,7 @@ export type StringifiedUtil = readonly [
   index: number,
   selector: string | undefined,
   body: string,
-  mediaQuery: string | undefined,
+  parent: string | undefined,
   meta: RuleMeta | undefined,
 ]
 
@@ -271,14 +331,18 @@ export interface GenerateOptions {
   preflights?: boolean
 
   /**
+   * Includes safelist
+   */
+  safelist?: boolean
+
+  /**
+   * Genreate minified CSS
+   * @default false
+   */
+  minify?: boolean
+
+  /**
    * @expiremental
    */
   scope?: string
-
-  /**
-   * Show layer seperator in comments
-   *
-   * @default true
-   */
-  layerComments?: boolean
 }

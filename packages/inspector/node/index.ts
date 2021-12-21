@@ -1,10 +1,10 @@
-import { resolve, dirname } from 'path'
+import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import sirv from 'sirv'
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
 import type { UnocssPluginContext } from '@unocss/vite'
 import gzipSize from 'gzip-size'
-import { ModuleInfo, ProjectInfo } from '../types'
+import type { ModuleInfo, ProjectInfo } from '../types'
 
 const _dirname = typeof __dirname !== 'undefined'
   ? __dirname
@@ -13,7 +13,9 @@ const _dirname = typeof __dirname !== 'undefined'
 export default function UnocssInspector(ctx: UnocssPluginContext): Plugin {
   let config: ResolvedConfig
 
-  function configureServer(server: ViteDevServer) {
+  async function configureServer(server: ViteDevServer) {
+    await ctx.ready
+
     server.middlewares.use('/__unocss', sirv(resolve(_dirname, '../dist/client'), {
       single: true,
       dev: true,
@@ -24,10 +26,11 @@ export default function UnocssInspector(ctx: UnocssPluginContext): Plugin {
         return next()
       if (req.url === '/') {
         const info: ProjectInfo = {
+          version: ctx.uno.version,
           root: config.root,
           modules: Array.from(ctx.modules.keys()),
-          configPath: ctx.configFilepath,
           config: ctx.uno.config,
+          configSources: (await ctx.ready).sources,
         }
         res.setHeader('Content-Type', 'application/json')
         res.write(JSON.stringify(info, null, 2))

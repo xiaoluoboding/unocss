@@ -1,20 +1,12 @@
 import type { Plugin, ViteDevServer } from 'vite'
-import { createFilter } from '@rollup/pluginutils'
-import { getPath } from '../../utils'
-import { UnocssPluginContext } from '../../context'
-import { defaultExclude, defaultInclude } from '../../../../plugins-common/defaults'
-import { LAYER_MARK_ALL, resolveId } from '../../../../plugins-common/layers'
+import type { UnocssPluginContext } from '../../../../plugins-common'
+import { LAYER_MARK_ALL, getPath, resolveId } from '../../../../plugins-common'
 import { READY_CALLBACK_DEFAULT } from './shared'
 
 const WARN_TIMEOUT = 2000
 
-export function GlobalModeDevPlugin({ config, uno, tokens, onInvalidate, scan }: UnocssPluginContext): Plugin[] {
+export function GlobalModeDevPlugin({ uno, tokens, onInvalidate, extract, filter }: UnocssPluginContext): Plugin[] {
   const servers: ViteDevServer[] = []
-
-  const filter = createFilter(
-    config.include || defaultInclude,
-    config.exclude || defaultExclude,
-  )
 
   const tasks: Promise<any>[] = []
   const entries = new Map<string, string>()
@@ -31,7 +23,6 @@ export function GlobalModeDevPlugin({ config, uno, tokens, onInvalidate, scan }:
         const mod = server.moduleGraph.getModuleById(id)
         if (!mod)
           continue
-        lastUpdate = Date.now()
         server!.moduleGraph.invalidateModule(mod)
       }
     }
@@ -40,6 +31,7 @@ export function GlobalModeDevPlugin({ config, uno, tokens, onInvalidate, scan }:
   }
 
   function sendUpdate() {
+    lastUpdate = Date.now()
     for (const server of servers) {
       server.ws.send({
         type: 'update',
@@ -75,7 +67,7 @@ export function GlobalModeDevPlugin({ config, uno, tokens, onInvalidate, scan }:
       name: 'unocss:global',
       apply: 'serve',
       enforce: 'pre',
-      configureServer(_server) {
+      async configureServer(_server) {
         servers.push(_server)
         _server.middlewares.use(async(req, res, next) => {
           setWarnTimer()
@@ -92,14 +84,14 @@ export function GlobalModeDevPlugin({ config, uno, tokens, onInvalidate, scan }:
         })
       },
       transform(code, id) {
-        if (filter(id))
-          scan(code, id)
+        if (filter(code, id))
+          extract(code, id)
         return null
       },
       transformIndexHtml: {
         enforce: 'pre',
         transform(code, { filename }) {
-          scan(code, filename)
+          extract(code, filename)
         },
       },
       resolveId(id) {

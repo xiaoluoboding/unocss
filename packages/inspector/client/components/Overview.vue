@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { overview, overviewFetch, info } from '../composables/fetch'
+import { info, overview, overviewFetch } from '../composables/fetch'
 
 overviewFetch.execute()
 </script>
@@ -41,11 +41,19 @@ overviewFetch.execute()
           </div>
           <ModuleId :id="info.configPath" />
         </div>
+        <div>
+          <div op80>
+            Version
+          </div>
+          <div op50 ws-pre>
+            {{ info?.version }}
+          </div>
+        </div>
       </div>
       <div b="t main" p4 grid="~ cols-4 gap-4">
         <div>
           <div op80>
-            Scanned Files
+            Included Files
           </div>
           {{ info?.modules.length }}
         </div>

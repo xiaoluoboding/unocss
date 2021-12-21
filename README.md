@@ -34,6 +34,7 @@ Inspired by [Windi CSS](http://windicss.org/), [Tailwind CSS](https://tailwindcs
 - [Inspector](#inspector) - inspect and debug interatively.
 - [CSS-in-JS Runtime version](https://github.com/antfu/unocss/tree/main/packages/runtime)
 - [CSS Scoping](#css-scoping)
+- [VS Code extension](https://marketplace.visualstudio.com/items?itemName=antfu.unocss)
 - Code-splitting for CSS - ships minimal CSS for MPA.
 - Library friendly - ships atomic styles with your component libraries and safely scoped.
 
@@ -62,6 +63,8 @@ UnoCSS is designed **NOT** to be/have:
 
 ## Installation
 
+### Vite
+
 ```bash
 npm i -D unocss
 ```
@@ -88,6 +91,79 @@ That's it, have fun.
 
 See [all packages](https://github.com/antfu/unocss/tree/main/packages).
 
+### Nuxt
+
+```bash
+npm i -D @unocss/nuxt
+```
+
+```ts
+// nuxt.config.js
+
+export default {
+  buildModules: [
+    '@unocss/nuxt'
+  ]
+}
+```
+
+Refer to the full documentation on https://github.com/antfu/unocss/tree/main/packages/nuxt
+
+### Vite + Svelte
+
+You must add `Unocss` plugin before `@sveltejs/vite-plugin-svelte`.
+
+To support `class:foo` and `class:foo={bar}` add `Unocss` and configure `extractorSvelte`:
+
+```ts
+// vite.config.js
+import { svelte } from '@sveltejs/vite-plugin-svelte'
+import Unocss from 'unocss/vite'
+import { extractorSvelte } from '@unocss/core'
+
+export default {
+  plugins: [
+    Unocss({
+      extractors: [extractorSvelte],
+      /* options */
+    }),
+    svelte()
+  ]
+}
+```
+
+###  Sveltekit
+
+To support `class:foo` and `class:foo={bar}` add `Unocss` plugin and configure `extractorSvelte`:
+
+```ts
+// svelte.config.js
+import preprocess from 'svelte-preprocess'
+import UnoCss from 'unocss/vite'
+import { extractorSvelte } from '@unocss/core'
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  // Consult https://github.com/sveltejs/svelte-preprocess
+  // for more information about preprocessors
+  preprocess: preprocess(),
+
+  kit: {
+
+    // hydrate the <div id="svelte"> element in src/app.html
+    target: '#svelte',
+    vite: {
+      plugins: [
+        UnoCss({
+          extractors: [extractorSvelte],
+          /* options */
+        })
+      ]
+    }
+  }
+}  
+```
+
 ## Configurations
 
 UnoCSS is an atomic-CSS engine instead of a framework. Everything is designed with flexibility and performance in mind. In UnoCSS, there are no core utilities; all functionalities are provided via presets.
@@ -112,7 +188,7 @@ Presets are the heart of UnoCSS that lets you make your own custom framework in 
 ###### Official Presets
 
 - [@unocss/preset-uno](https://github.com/antfu/unocss/tree/main/packages/preset-uno) - The default preset.
-- [@unocss/preset-attributify](https://github.com/antfu/unocss/tree/main/packages/preset-attributify) - Provides [Attributify Mode](#attributify-mode) to other presets and rules.
+- [@unocss/preset-attributify](https://github.com/antfu/unocss/tree/main/packages/preset-attributify) - Provides [Attributify Mode](https://github.com/antfu/unocss/tree/main/packages/preset-attributify#attributify-mode) to other presets and rules.
 - [@unocss/preset-icons](https://github.com/antfu/unocss/tree/main/packages/preset-icons) - Use any icon as a class utility.
 
 ###### Community Presets
@@ -488,6 +564,24 @@ import './my-custom.css'
 import 'uno:utilities.css'
 ```
 
+### Utilities Preprocess & Prefixing
+
+UnoCSS also provides the ability to preprocess and transform extracted utilities before processing to the matcher. For example, the following example allows you to add a global prefix to all utilities:
+
+```ts
+preprocess(matcher) {
+  return matcher.startsWith('prefix-')
+    ? matcher.slice(7)
+    : undefined // ignore
+}
+```
+
+### Scanning
+
+By default UnoCSS will scan for components files like: `.jsx`, `.tsx`, `.vue`, `.md`, `.html`, `.svelte`, `.astro`. 
+
+`.js` and `.ts` files are not included by default. You can add `@unocss-include` anywhere in the file that you want UnoCSS to scan at per-file bias, or include `*.js` or `*.ts` in the configuration to make all js/ts files as scan targets.
+
 ### Inspector
 
 From v0.7.0, our Vite plugin now ships with a dev inspector ([@unocss/inspector](https://github.com/antfu/unocss/tree/main/packages/inspector)) for you to view, play and analyse your custom rules and setup. Visit `http://localhost:3000/__unocss` in your Vite dev server to see it.
@@ -514,6 +608,7 @@ See [@unocss/runtime](https://github.com/antfu/unocss/tree/main/packages/runtime
 
 // TODO: -->
 
+
 ## Acknowledgement
 
 > in alphabet order
@@ -534,6 +629,10 @@ See [@unocss/runtime](https://github.com/antfu/unocss/tree/main/packages/runtime
     <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
   </a>
 </p>
+
+## Project Activity
+
+![Alt](https://repobeats.axiom.co/api/embed/00d8bcc7f3651c0f0cccf9228f5776fb111ab478.svg "Repobeats analytics image")
 
 ## License
 

@@ -1,6 +1,7 @@
 import { createGenerator } from '@unocss/core'
 import presetUno from '@unocss/preset-uno'
 import presetAttributify, { variantAttributify } from '@unocss/preset-attributify'
+import { describe, expect, test } from 'vitest'
 
 describe('attributify', () => {
   const fixture1 = `
@@ -16,8 +17,17 @@ describe('attributify', () => {
   v-bind:p="y-2 x-4"
   border="2 rounded blue-200"
   un-children="m-auto"
-  pt2 ma rounded-sm
+  pt2 rounded-sm
   inline-block
+  transform
+  translate-x-100%
+  translate-y-[10%]
+  rotate-30
+  rotate-60="" ma=""
+  m='\`
+  1 2
+  3
+\`'
 >
   Button
 </button>
